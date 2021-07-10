@@ -22,7 +22,7 @@ int luaref_ref(luaref refL, lua_State* L) {
     if (!lua_next(refL, 1)) {
         return lua_gettop(refL);
     }
-    int r = (int)lua_tointeger(L, -2);
+    int r = (int)lua_tointeger(refL, -2);
     lua_pop(refL, 1);
     lua_pushnil(refL);
     lua_rawset(refL, 1);
@@ -50,6 +50,9 @@ void luaref_unref(luaref refL, int ref) {
             break;
         }
         lua_pop(refL, 1);
+        lua_pushinteger(refL, top);
+        lua_pushnil(refL);
+        lua_rawset(refL, 1);
     }
     lua_settop(refL, top);
 }
