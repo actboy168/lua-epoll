@@ -1,6 +1,8 @@
 #include "luaref.h"
 #include <assert.h>
 
+#define FREELIST 1
+
 luaref luaref_init(lua_State* L) {
     lua_State* refL = lua_newthread(L);
     lua_rawsetp(L, LUA_REGISTRYINDEX, refL);
@@ -19,13 +21,13 @@ int luaref_ref(luaref refL, lua_State* L) {
     }
     lua_xmove(L, refL, 1);
     lua_pushnil(refL);
-    if (!lua_next(refL, 1)) {
+    if (!lua_next(refL, FREELIST)) {
         return lua_gettop(refL);
     }
     int r = (int)lua_tointeger(refL, -2);
     lua_pop(refL, 1);
     lua_pushnil(refL);
-    lua_rawset(refL, 1);
+    lua_rawset(refL, FREELIST);
     lua_replace(refL, r);
     return r;
 }
@@ -36,23 +38,20 @@ void luaref_unref(luaref refL, int ref) {
     }
     int top = lua_gettop(refL);
     if (top != ref) {
-        lua_pushinteger(refL, ref);
         lua_pushboolean(refL, 1);
-        lua_rawset(refL, 1);
+        lua_rawseti(refL, FREELIST, ref);
         lua_pushnil(refL);
         lua_replace(refL, ref);
         return;
     }
-    for (--top; top > 1;--top) {
-        lua_pushinteger(refL, top);
-        if (LUA_TNIL == lua_rawget(refL, 1)) {
+    for (--top; top > FREELIST;--top) {
+        if (LUA_TNIL == lua_rawgeti(refL, FREELIST, top)) {
             lua_pop(refL, 1);
             break;
         }
         lua_pop(refL, 1);
-        lua_pushinteger(refL, top);
         lua_pushnil(refL);
-        lua_rawset(refL, 1);
+        lua_rawseti(refL, FREELIST, top);
     }
     lua_settop(refL, top);
 }
