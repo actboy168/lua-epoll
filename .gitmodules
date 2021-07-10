@@ -1,0 +1,3 @@
+[submodule "3rd/wepoll"]
+	path = 3rd/wepoll
+	url = https://github.com/piscisaureus/wepoll
