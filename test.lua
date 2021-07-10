@@ -8,23 +8,20 @@ local EPOLLERR <const> = epoll.EPOLLERR
 local EPOLLHUP <const> = epoll.EPOLLHUP
 
 local function initfd(fd)
-    local sock = {fd=fd}
+    local sock = { fd = fd }
     epfd:event_init(fd:handle(), EPOLLIN | EPOLLOUT, sock)
     return sock
 end
 
 local function closefd(fd)
-    local h = fd:handle()
-    epfd:event_del(h)
-    epfd:event_close(h)
+    epfd:event_close(fd:handle())
     fd:close()
 end
 
-local s = assert(socket.bind("tcp", "127.0.0.1", 16333))
+local s = assert(socket.bind("tcp", "127.0.0.1", 10086))
 local server = initfd(s)
 function server:on_read()
-    local fd = self.fd
-    local newfd = assert(fd:accept())
+    local newfd = assert(self.fd:accept())
     local session = initfd(newfd)
     function session:on_read()
         assert("PING" == self.fd:recv(4))
@@ -40,7 +37,7 @@ function server:on_error()
     closefd(self.fd)
 end
 
-local c = assert(socket.connect("tcp", "127.0.0.1", 16333))
+local c = assert(socket.connect("tcp", "127.0.0.1", 10086))
 local client = initfd(c)
 function client:on_read()
     local pong = self.fd:recv(4)

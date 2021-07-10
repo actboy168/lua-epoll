@@ -126,13 +126,15 @@ static int ep_event_init(lua_State *L) {
     if (epoll_ctl(ep->fd, EPOLL_CTL_ADD, fd, &ev) == -1){
         return ep_pusherr(L);
     }
-    lua_pushboolean(L,1);
+    lua_pushboolean(L, 1);
     return 1;
 }
 
 static int ep_event_close(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
+    epoll_fd fd = ep_tofd(L, 2);
     luaref_unref(ep->ref, findref(L));
+    epoll_ctl(ep->fd, EPOLL_CTL_DEL, fd, NULL);
     return 0;
 }
 
@@ -145,7 +147,7 @@ static int ep_event_add(lua_State *L) {
     if (epoll_ctl(ep->fd, EPOLL_CTL_ADD, fd, &ev) == -1){
         return ep_pusherr(L);
     }
-    lua_pushboolean(L,1);
+    lua_pushboolean(L, 1);
     return 1;
 }
 
