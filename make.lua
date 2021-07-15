@@ -12,3 +12,12 @@ lm:lua_dll "epoll" {
         links = "ws2_32",
     }
 }
+
+lm:lua_dll "testlib" {
+    includes = "src",
+    sources = {
+        "src/luaref.cpp",
+        "test/src/test_luaref.cpp",
+    },
+    export_luaopen = "off",
+}

@@ -1,3 +1,6 @@
 [submodule "3rd/wepoll"]
 	path = 3rd/wepoll
 	url = https://github.com/piscisaureus/wepoll
+[submodule "3rd/ltest"]
+	path = 3rd/ltest
+	url = https://github.com/actboy168/ltest
