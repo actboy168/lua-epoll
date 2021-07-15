@@ -3,6 +3,8 @@
 
 #define FREELIST 1
 
+static_assert(LUA_NOREF < FREELIST);
+
 luaref luaref_init(lua_State* L) {
     lua_State* refL = lua_newthread(L);
     lua_rawsetp(L, LUA_REGISTRYINDEX, refL);
@@ -13,6 +15,21 @@ luaref luaref_init(lua_State* L) {
 void luaref_close(lua_State* L, luaref refL) {
     lua_pushnil(L);
     lua_rawsetp(L, LUA_REGISTRYINDEX, refL);
+}
+
+bool luaref_isvalid(luaref refL, int ref) {
+    if (ref <= FREELIST || ref > lua_gettop(refL)) {
+        return false;
+    }
+    lua_pushnil(refL);
+    while (lua_next(refL, FREELIST)) {
+        lua_pop(refL, 1);
+        if (lua_tointeger(refL, -1) == ref) {
+            lua_pop(refL, 1);
+            return false;
+        }
+    }
+    return true;
 }
 
 int luaref_ref(luaref refL, lua_State* L) {
@@ -33,11 +50,14 @@ int luaref_ref(luaref refL, lua_State* L) {
 }
 
 void luaref_unref(luaref refL, int ref) {
-    if (ref == LUA_NOREF) {
+    if (ref <= FREELIST) {
         return;
     }
     int top = lua_gettop(refL);
-    if (top != ref) {
+    if (ref > top) {
+        return;
+    }
+    if (ref < top) {
         lua_pushboolean(refL, 1);
         lua_rawseti(refL, FREELIST, ref);
         lua_pushnil(refL);
@@ -57,7 +77,7 @@ void luaref_unref(luaref refL, int ref) {
 }
 
 void luaref_get(luaref refL, lua_State* L, int ref) {
-    assert(ref != LUA_NOREF);
+    assert(luaref_isvalid(refL, ref));
     lua_pushvalue(refL, ref);
     lua_xmove(refL, L, 1);
 }
