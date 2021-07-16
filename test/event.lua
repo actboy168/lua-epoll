@@ -128,20 +128,20 @@ function m.test_shutdown()
     local cep <const> = epoll.create(16)
     local sfd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
     local cfd <close> = assert(socket.connect("tcp", "127.0.0.1", get_port(sfd)))
-    sep:event_init(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
-    cep:event_init(cfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, cfd)
+    sep:event_init(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, sfd)
+    cep:event_init(cfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, cfd)
     assertEpollWait(sep, {sfd, "EPOLLIN"})
     assertEpollWait(cep, {cfd, "EPOLLOUT"})
     local newfd <close> = sfd:accept()
-    sep:event_init(newfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, newfd)
+    sep:event_init(newfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, newfd)
 
     newfd:shutdown "w"
     assertEpollWait(sep, {newfd, "EPOLLOUT"})
     lt.assertIsNil(newfd:send "")
-    assertEpollWait(cep, {cfd, "EPOLLIN | EPOLLOUT"})
+    assertEpollWait(cep, {cfd, "EPOLLIN | EPOLLOUT | EPOLLRDHUP"})
     lt.assertEquals({newfd:recv()}, {false})
 
     newfd:shutdown "r"
-    assertEpollWait(cep, {cfd, "EPOLLIN | EPOLLOUT"})
+    assertEpollWait(cep, {cfd, "EPOLLIN | EPOLLOUT | EPOLLRDHUP"})
     lt.assertIsNil(newfd:recv())
 end
