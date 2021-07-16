@@ -41,6 +41,32 @@ function m.test_unref()
     luaref.close(ref)
 end
 
+function m.test_isvalid()
+    local ref = luaref.init()
+    lt.assertEquals(luaref.isvalid(ref, -1), false)
+    lt.assertEquals(luaref.isvalid(ref, 0), false)
+    lt.assertEquals(luaref.isvalid(ref, 1), false)
+    lt.assertEquals(luaref.isvalid(ref, 2), false)
+
+    lt.assertEquals(luaref.ref(ref), 2)
+    lt.assertEquals(luaref.isvalid(ref, 2), true)
+    lt.assertEquals(luaref.isvalid(ref, 3), false)
+    luaref.unref(ref, 2)
+    lt.assertEquals(luaref.isvalid(ref, 2), false)
+
+    lt.assertEquals(luaref.ref(ref), 2)
+    lt.assertEquals(luaref.ref(ref), 3)
+    lt.assertEquals(luaref.isvalid(ref, 2), true)
+    lt.assertEquals(luaref.isvalid(ref, 3), true)
+    lt.assertEquals(luaref.isvalid(ref, 4), false)
+    luaref.unref(ref, 2)
+    lt.assertEquals(luaref.isvalid(ref, 2), false)
+    lt.assertEquals(luaref.isvalid(ref, 3), true)
+    lt.assertEquals(luaref.isvalid(ref, 4), false)
+
+    luaref.close(ref)
+end
+
 function m.test_freelist()
     local ref = luaref.init()
 
