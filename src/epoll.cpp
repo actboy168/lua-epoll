@@ -20,12 +20,21 @@ struct lua_epoll* ep_get(lua_State *L) {
 
 static int ep_pusherr(lua_State *L) {
 #if !defined(LUAEPOLL_RETURN_ERROR)
-    lua_pushstring(L, strerror(errno));
+    lua_pushfstring(L, "(%d) %s", errno, strerror(errno));
     return lua_error(L);
 #else
     lua_pushnil(L);
     lua_pushstring(L, strerror(errno));
     return 2;
+#endif
+}
+
+static int ep_pushsuc(lua_State *L) {
+#if !defined(LUAEPOLL_RETURN_ERROR)
+    return 0;
+#else
+    lua_pushboolean(L, 1);
+    return 1;
 #endif
 }
 
@@ -59,9 +68,13 @@ static int ep_wait(lua_State *L) {
     int timeout = (int)luaL_optinteger(L, 2, -1);
     ep->n = epoll_wait(ep->fd, ep->events, ep->max_events, timeout);
     if (ep->n == -1) {
+#if defined(LUAEPOLL_RETURN_ERROR)
         lua_pushcfunction(L, ep_wait_error);
         ep_pusherr(L);
         return 3;
+#else
+        return ep_pusherr(L);
+#endif
     }
     ep->i = 0;
     lua_pushcfunction(L, ep_wait_iter);
@@ -70,13 +83,11 @@ static int ep_wait(lua_State *L) {
 }
 
 static bool ep_close_epoll(struct lua_epoll* ep) {
-    if (ep->fd != epoll_invalid_handle) {
-        if (epoll_close(ep->fd) != -1) {
-            ep->fd = epoll_invalid_handle;
-            return true;
-        }
+    if (epoll_close(ep->fd) == -1) {
+        return false;
     }
-    return false;
+    ep->fd = epoll_invalid_handle;
+    return true;
 }
 
 static int ep_close(lua_State *L) {
@@ -84,8 +95,7 @@ static int ep_close(lua_State *L) {
     if (!ep_close_epoll(ep)) {
         return ep_pusherr(L);
     }
-    lua_pushboolean(L, 1);
-    return 1;
+    return ep_pushsuc(L);
 }
 
 static int ep_mt_gc(lua_State *L) {
@@ -137,8 +147,7 @@ static int ep_event_init(lua_State *L) {
     if (epoll_ctl(ep->fd, EPOLL_CTL_ADD, fd, &ev) == -1){
         return ep_pusherr(L);
     }
-    lua_pushboolean(L, 1);
-    return 1;
+    return ep_pushsuc(L);
 }
 
 static int ep_event_close(lua_State *L) {
@@ -158,8 +167,7 @@ static int ep_event_add(lua_State *L) {
     if (epoll_ctl(ep->fd, EPOLL_CTL_ADD, fd, &ev) == -1){
         return ep_pusherr(L);
     }
-    lua_pushboolean(L, 1);
-    return 1;
+    return ep_pushsuc(L);
 }
 
 static int ep_event_mod(lua_State *L) {
@@ -171,8 +179,7 @@ static int ep_event_mod(lua_State *L) {
     if (epoll_ctl(ep->fd, EPOLL_CTL_MOD, fd, &ev) == -1) {
         return ep_pusherr(L);
     }
-    lua_pushboolean(L, 1);
-    return 1;
+    return ep_pushsuc(L);
 }
 
 static int ep_event_del(lua_State *L) {
@@ -181,8 +188,7 @@ static int ep_event_del(lua_State *L) {
     if (epoll_ctl(ep->fd, EPOLL_CTL_DEL, fd, NULL) == -1) {
         return ep_pusherr(L);
     }
-    lua_pushboolean(L, 1);
-    return 1;
+    return ep_pushsuc(L);
 }
 
 static int ep_create(lua_State *L) {
