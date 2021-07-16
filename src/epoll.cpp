@@ -69,24 +69,35 @@ static int ep_wait(lua_State *L) {
     return 2;
 }
 
+static bool ep_close_epoll(struct lua_epoll* ep) {
+    if (ep->fd != epoll_invalid_handle) {
+        if (epoll_close(ep->fd) != -1) {
+            ep->fd = epoll_invalid_handle;
+            return true;
+        }
+    }
+    return false;
+}
+
 static int ep_close(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
-    if (ep->fd != epoll_invalid_handle) {
-        if (epoll_close(ep->fd) == -1) {
-            return ep_pusherr(L);
-        }
-        ep->fd = epoll_invalid_handle;
+    if (!ep_close_epoll(ep)) {
+        return ep_pusherr(L);
     }
     lua_pushboolean(L, 1);
     return 1;
 }
 
-static int ep_gc(lua_State *L) {
+static int ep_mt_gc(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
-    if (ep->fd != epoll_invalid_handle && epoll_close(ep->fd) != -1) {
-        ep->fd = epoll_invalid_handle;
-    }
+    ep_close_epoll(ep);
     luaref_close(L, ep->ref);
+    return 0;
+}
+
+static int ep_mt_close(lua_State *L) {
+    struct lua_epoll* ep = ep_get(L);
+    ep_close_epoll(ep);
     return 0;
 }
 
@@ -199,7 +210,8 @@ static int ep_create(lua_State *L) {
             { "event_add", ep_event_add },
             { "event_mod", ep_event_mod },
             { "event_del", ep_event_del },
-            { "__gc", ep_gc },
+            { "__gc", ep_mt_gc },
+            { "__close", ep_mt_close },
             { "__index", NULL },
             { NULL, NULL },
         };
