@@ -59,7 +59,8 @@ static int ep_wait_iter(lua_State *L) {
         return 0;
     }
     struct epoll_event const& ev = ep->events[ep->i];
-    luaref_get(ep->ref, L, ev.data.u32);
+    lua_getiuservalue(L, 1, 2);
+    lua_rawgeti(L, -1, ep->i + 1);
     lua_pushinteger(L, ev.events);
     ep->i++;
     return 2;
@@ -74,8 +75,8 @@ static int ep_handle(lua_State *L) {
 static int ep_wait(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
     int timeout = (int)luaL_optinteger(L, 2, -1);
-    ep->n = epoll_wait(ep->fd, ep->events, ep->max_events, timeout);
-    if (ep->n == -1) {
+    int n = epoll_wait(ep->fd, ep->events, ep->max_events, timeout);
+    if (n == -1) {
 #if defined(LUAEPOLL_RETURN_ERROR)
         lua_pushcfunction(L, ep_wait_error);
         ep_pusherr(L);
@@ -84,7 +85,21 @@ static int ep_wait(lua_State *L) {
         return ep_pusherr(L);
 #endif
     }
+    lua_getiuservalue(L, 1, 2);
+    for (int i = 0; i < n; ++i) {
+        struct epoll_event const& ev = ep->events[i];
+        luaref_get(ep->ref, L, ev.data.u32);
+        lua_rawseti(L, -2, i + 1);
+    }
+    if (n < ep->n) {
+        for (int i = n; i < ep->n; ++i) {
+            lua_pushnil(L);
+            lua_rawseti(L, -2, i + 1);
+        }
+    }
+    lua_pop(L, 1);
     ep->i = 0;
+    ep->n = n;
     lua_pushcfunction(L, ep_wait_iter);
     lua_pushvalue(L, 1);
     return 2;
@@ -237,12 +252,16 @@ static int ep_create(lua_State *L) {
         return ep_pusherr(L);
     }
     size_t sz = sizeof(struct lua_epoll) + (max_events - 1) * sizeof(struct epoll_event);
-    struct lua_epoll* ep = (struct lua_epoll*)lua_newuserdatauv(L, sz, 1);
+    struct lua_epoll* ep = (struct lua_epoll*)lua_newuserdatauv(L, sz, 2);
     lua_newtable(L);
     lua_setiuservalue(L, -2, 1);
+    lua_newtable(L);
+    lua_setiuservalue(L, -2, 2);
     ep->fd = epfd;
     ep->max_events = max_events;
     ep->ref = luaref_init(L);
+    ep->i = 0;
+    ep->n = 0;
     if (luaL_newmetatable(L, "EPOLL")) {
         luaL_Reg l[] = {
             { "handle", ep_handle },
