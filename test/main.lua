@@ -6,5 +6,7 @@ package.path = table.concat({
 local lt = require "ltest"
 
 require "test.luaref"
+require "test.basic"
+require "test.event"
 
 os.exit(lt.run(), true)
