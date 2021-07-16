@@ -9,6 +9,8 @@
 typedef SOCKET epoll_fd;
 typedef HANDLE epoll_handle;
 
+#define EPOLL_TYPE "wepoll"
+
 #else
 
 #include <sys/epoll.h>
@@ -20,5 +22,7 @@ typedef int epoll_handle;
 inline int epoll_close(epoll_fd epfd) {
     return close(epfd);
 }
+
+#define EPOLL_TYPE "epoll"
 
 #endif

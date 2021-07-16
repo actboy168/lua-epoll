@@ -120,6 +120,7 @@ function m.test_send_recv()
         assertEpollWait(sep, {newfd, "EPOLLOUT"})
         assertEpollWait(cep, {cfd, "EPOLLIN | EPOLLOUT"})
         lt.assertEquals(cfd:recv(), data)
+        lt.assertEquals({cfd:recv()}, {false})
         assertEpollWait(cep, {cfd, "EPOLLOUT"})
     end
     test "1234567890"

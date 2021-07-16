@@ -1,11 +1,6 @@
 local lt = require "ltest"
 local epoll = require "epoll"
 local socket = require "bee.socket"
-local platform = require "bee.platform"
-
-local function isWindows()
-    return platform.OS == "Windows"
-end
 
 local m = lt.test "basic"
 
@@ -66,7 +61,7 @@ function m.test_enum()
     lt.assertEquals(epoll.EPOLLWRBAND, 1 << 9)
     lt.assertEquals(epoll.EPOLLMSG,    1 << 10)
     lt.assertEquals(epoll.EPOLLRDHUP,  1 << 13)
-    if isWindows() then
+    if epoll.type == "wepoll" then
         lt.assertEquals(epoll.EPOLLONESHOT, 1 << 31)
     else
         lt.assertEquals(epoll.EPOLLONESHOT, 1 << 30)

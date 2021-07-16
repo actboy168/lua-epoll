@@ -297,6 +297,9 @@ int luaopen_epoll(lua_State *L) {
     };
     luaL_newlib(L, l);
 
+    lua_pushstring(L, EPOLL_TYPE);
+    lua_setfield(L, -2, "type");
+
 #define SETENUM(E) \
     lua_pushinteger(L, E); \
     lua_setfield(L, -2, #E)
