@@ -127,6 +127,21 @@ static void storeref(lua_State *L, int r) {
     lua_pop(L, 1);
 }
 
+static int cleanref(lua_State *L) {
+    lua_getiuservalue(L, 1, 1);
+    lua_pushvalue(L, 2);
+    if (LUA_TNUMBER != lua_rawget(L, -2)) {
+        lua_pop(L, 2);
+        return LUA_NOREF;
+    }
+    int r = (int)lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    lua_pushnil(L);
+    lua_rawset(L, -3);
+    lua_pop(L, 1);
+    return r;
+}
+
 static int findref(lua_State *L) {
     lua_getiuservalue(L, 1, 1);
     lua_pushvalue(L, 2);
@@ -161,7 +176,11 @@ static int ep_event_init(lua_State *L) {
 static int ep_event_close(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
     epoll_fd fd = ep_tofd(L, 2);
-    luaref_unref(ep->ref, findref(L));
+    int r = cleanref(L);
+    if (r == LUA_NOREF) {
+        return luaL_error(L, "event is not initialized.");
+    }
+    luaref_unref(ep->ref, r);
     epoll_ctl(ep->fd, EPOLL_CTL_DEL, fd, NULL);
     return 0;
 }
@@ -169,9 +188,13 @@ static int ep_event_close(lua_State *L) {
 static int ep_event_add(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
     epoll_fd fd = ep_tofd(L, 2);
+    int r = findref(L);
+    if (r == LUA_NOREF) {
+        return luaL_error(L, "event is not initialized.");
+    }
     struct epoll_event ev;
     ev.events = (uint32_t)luaL_checkinteger(L, 3);
-    ev.data.u32 = findref(L);
+    ev.data.u32 = r;
     if (epoll_ctl(ep->fd, EPOLL_CTL_ADD, fd, &ev) == -1){
         return ep_pusherr(L);
     }
@@ -181,9 +204,13 @@ static int ep_event_add(lua_State *L) {
 static int ep_event_mod(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
     epoll_fd fd = ep_tofd(L, 2);
+    int r = findref(L);
+    if (r == LUA_NOREF) {
+        return luaL_error(L, "event is not initialized.");
+    }
     struct epoll_event ev;
     ev.events = (uint32_t)luaL_checkinteger(L, 3);
-    ev.data.u32 = findref(L);
+    ev.data.u32 = r;
     if (epoll_ctl(ep->fd, EPOLL_CTL_MOD, fd, &ev) == -1) {
         return ep_pusherr(L);
     }
