@@ -42,6 +42,7 @@ static epoll_fd ep_tofd(lua_State *L, int idx) {
     return (epoll_fd)(intptr_t)lua_touserdata(L, idx);
 }
 
+#if defined(LUAEPOLL_RETURN_ERROR)
 static int ep_wait_error(lua_State *L) {
     if (lua_type(L, 2) != LUA_TSTRING) {
         return 0;
@@ -50,6 +51,7 @@ static int ep_wait_error(lua_State *L) {
     lua_insert(L, -2);
     return 2;
 }
+#endif
 
 static int ep_wait_iter(lua_State *L) {
     struct lua_epoll* ep = (struct lua_epoll*)lua_touserdata(L, 1);
@@ -61,6 +63,12 @@ static int ep_wait_iter(lua_State *L) {
     lua_pushinteger(L, ev.events);
     ep->i++;
     return 2;
+}
+
+static int ep_handle(lua_State *L) {
+    struct lua_epoll* ep = ep_get(L);
+    lua_pushlightuserdata(L, (void*)(intptr_t)ep->fd);
+    return 1;
 }
 
 static int ep_wait(lua_State *L) {
@@ -209,6 +217,7 @@ static int ep_create(lua_State *L) {
     ep->ref = luaref_init(L);
     if (luaL_newmetatable(L, "EPOLL")) {
         luaL_Reg l[] = {
+            { "handle", ep_handle },
             { "wait", ep_wait },
             { "close", ep_close },
             { "event_init", ep_event_init },
