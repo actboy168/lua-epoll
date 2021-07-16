@@ -136,6 +136,7 @@ static int cleanref(lua_State *L) {
     }
     int r = (int)lua_tointeger(L, -1);
     lua_pop(L, 1);
+    lua_pushvalue(L, 2);
     lua_pushnil(L);
     lua_rawset(L, -3);
     lua_pop(L, 1);
