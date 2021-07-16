@@ -68,7 +68,9 @@ local function assertEpollWait(epfd, values)
         end
     else
         local v = values
-        expected[v[1]] = v[2]
+        if v[1] then
+            expected[v[1]] = v[2]
+        end
     end
 
     local start = time.monotonic()
@@ -91,10 +93,10 @@ end
 local m = lt.test "event"
 
 function m.test_connect()
-    local sep <const> = epoll.create(16)
-    local cep <const> = epoll.create(16)
     local sfd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
     local cfd <close> = assert(socket.connect("tcp", "127.0.0.1", get_port(sfd)))
+    local sep <const> = epoll.create(16)
+    local cep <const> = epoll.create(16)
     sep:event_init(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
     cep:event_init(cfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, cfd)
     assertEpollWait(sep, {sfd, "EPOLLIN"})
@@ -102,10 +104,10 @@ function m.test_connect()
 end
 
 function m.test_send_recv()
-    local sep <const> = epoll.create(16)
-    local cep <const> = epoll.create(16)
     local sfd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
     local cfd <close> = assert(socket.connect("tcp", "127.0.0.1", get_port(sfd)))
+    local sep <const> = epoll.create(16)
+    local cep <const> = epoll.create(16)
     sep:event_init(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
     cep:event_init(cfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, cfd)
     assertEpollWait(sep, {sfd, "EPOLLIN"})
@@ -124,10 +126,10 @@ function m.test_send_recv()
 end
 
 function m.test_shutdown()
-    local sep <const> = epoll.create(16)
-    local cep <const> = epoll.create(16)
     local sfd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
     local cfd <close> = assert(socket.connect("tcp", "127.0.0.1", get_port(sfd)))
+    local sep <const> = epoll.create(16)
+    local cep <const> = epoll.create(16)
     sep:event_init(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, sfd)
     cep:event_init(cfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, cfd)
     assertEpollWait(sep, {sfd, "EPOLLIN"})
