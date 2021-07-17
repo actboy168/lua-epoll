@@ -23,7 +23,10 @@ lm:lua_dll "testlib" {
 }
 
 lm:build "runtest" {
-    deps = "testlib",
+    deps = {
+        "epoll",
+        "testlib"
+    },
     "$luamake", "test"
 }
 
