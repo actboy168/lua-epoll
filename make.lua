@@ -21,3 +21,10 @@ lm:lua_dll "testlib" {
     },
     export_luaopen = "off",
 }
+
+lm:build "runtest" {
+    deps = "testlib",
+    "$luamake", "test"
+}
+
+lm:default "epoll"
