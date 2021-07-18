@@ -108,7 +108,6 @@ local function create_stream(fd)
     end
     epfd:event_init(fd:handle(), on_event)
     event_r = true
-    event_w = true
     event_update()
 
     function sock:send(data)
@@ -180,8 +179,12 @@ local function create_listen(fd)
 end
 
 function m.test()
+    local function get_port(fd)
+        local _, port = fd:info "socket"
+        return port
+    end
     local quit = false
-    local s = assert(socket.bind("tcp", "127.0.0.1", 10086))
+    local s = assert(socket.bind("tcp", "127.0.0.1", 0))
     local server = create_listen(s)
     function server:on_accept()
         local newfd = assert(self.fd:accept())
@@ -197,7 +200,7 @@ function m.test()
         end
     end
 
-    local c = assert(socket.connect("tcp", "127.0.0.1", 10086))
+    local c = assert(socket.connect("tcp", "127.0.0.1", get_port(s)))
     local client = create_stream(c)
     client:send "PING-1"
     function client:on_recv()
