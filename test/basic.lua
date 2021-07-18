@@ -14,10 +14,10 @@ end
 function m.test_close()
     local epfd = epoll.create(16)
     local fd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
-    epfd:event_init(fd:handle(), 0)
+    epfd:event_init(fd:handle())
     epfd:close()
     lt.assertErrorMsgEquals("(9) Bad file descriptor", epfd.close, epfd)
-    lt.assertErrorMsgEquals("(9) Bad file descriptor", epfd.event_init, epfd, fd:handle(), 0)
+    lt.assertErrorMsgEquals("(9) Bad file descriptor", epfd.event_init, epfd, fd:handle())
 end
 
 function m.test_event()
@@ -27,7 +27,8 @@ function m.test_event()
     lt.assertError(epfd.event_mod, epfd, fd:handle(), 0)
     lt.assertError(epfd.event_del, epfd, fd:handle())
     lt.assertError(epfd.event_close, epfd, fd:handle())
-    epfd:event_init(fd:handle(), 0)
+
+    epfd:event_init(fd:handle(), fd, 0)
     lt.assertError(epfd.event_add, epfd, fd:handle(), 0)
     epfd:event_mod(fd:handle(), 0)
     epfd:event_del(fd:handle())
@@ -37,6 +38,16 @@ function m.test_event()
     lt.assertError(epfd.event_add, epfd, fd:handle(), 0)
     epfd:event_mod(fd:handle(), 0)
     epfd:event_close(fd:handle())
+
+    epfd:event_init(fd:handle())
+    lt.assertError(epfd.event_mod, epfd, fd:handle(), 0)
+    lt.assertError(epfd.event_del, epfd, fd:handle())
+    epfd:event_add(fd:handle(), 0)
+    lt.assertError(epfd.event_add, epfd, fd:handle(), 0)
+    epfd:event_mod(fd:handle(), 0)
+    epfd:event_del(fd:handle())
+    epfd:event_close(fd:handle())
+
     lt.assertError(epfd.event_add, epfd, fd:handle(), 0)
     lt.assertError(epfd.event_mod, epfd, fd:handle(), 0)
     lt.assertError(epfd.event_del, epfd, fd:handle())
@@ -84,7 +95,7 @@ function m.test_wait()
     end
     local epfd <close> = epoll.create(16)
     local fd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
-    epfd:event_init(fd:handle(), 0)
+    epfd:event_init(fd:handle(), fd)
     for _ in epfd:wait(0) do
         lt.failure "Shouldn't run to here."
     end

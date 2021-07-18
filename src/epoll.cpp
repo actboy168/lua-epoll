@@ -172,19 +172,21 @@ static int findref(lua_State *L) {
 
 static int ep_event_init(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
-    epoll_fd fd = ep_tofd(L, 2);
-    struct epoll_event ev;
-    ev.events = (uint32_t)luaL_checkinteger(L, 3);
-    if (lua_isnoneornil(L, 4)) {
-        lua_pushvalue(L, 2);
-    }
-    else {
-        lua_settop(L, 4);
-    }
-    ev.data.u32 = luaref_ref(ep->ref, L);
-    storeref(L, ev.data.u32);
-    if (epoll_ctl(ep->fd, EPOLL_CTL_ADD, fd, &ev) == -1){
+    if (ep->fd == epoll_invalid_handle) {
+        errno = EBADF;
         return ep_pusherr(L);
+    }
+    epoll_fd fd = ep_tofd(L, 2);
+    lua_pushvalue(L, 3);
+    int r = luaref_ref(ep->ref, L);
+    storeref(L, r);
+    if (!lua_isnoneornil(L, 4)) {
+        struct epoll_event ev;
+        ev.events = (uint32_t)luaL_checkinteger(L, 4);
+        ev.data.u32 = r;
+        if (epoll_ctl(ep->fd, EPOLL_CTL_ADD, fd, &ev) == -1){
+            return ep_pusherr(L);
+        }
     }
     return ep_pushsuc(L);
 }

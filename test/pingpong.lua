@@ -28,10 +28,10 @@ local function create_stream(fd)
     local function event_update()
         local mask = 0
         if event_r then
-            mask = mask & EPOLLIN
+            mask = mask | EPOLLIN
         end
         if event_w then
-            mask = mask & EPOLLOUT
+            mask = mask | EPOLLOUT
         end
         if mask ~= event_mask then
             if mask == 0 then
@@ -106,7 +106,11 @@ local function create_stream(fd)
             end
         end
     end
-    epfd:event_init(fd:handle(), EPOLLIN | EPOLLOUT, on_event)
+    epfd:event_init(fd:handle(), on_event)
+    event_r = true
+    event_w = true
+    event_update()
+
     function sock:send(data)
         if closed then
             return
@@ -171,7 +175,7 @@ local function create_listen(fd)
             sock:on_accept()
         end
     end
-    epfd:event_init(fd:handle(), EPOLLIN, on_event)
+    epfd:event_init(fd:handle(), on_event, EPOLLIN)
     return sock
 end
 
