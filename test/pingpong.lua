@@ -50,8 +50,11 @@ local function create_stream(fd)
         assert(halfclose_w)
     end
     local function on_read()
-        local data = fd:recv()
+        local data, err = fd:recv()
         if data == nil then
+            if err then
+                lt.failure("recv error: %s", err)
+            end
             halfclose_r = true
             event_r = false
             if halfclose_w then
@@ -74,8 +77,11 @@ local function create_stream(fd)
         end
     end
     local function on_write()
-        local n = fd:send(wbuf)
+        local n, err = fd:send(wbuf)
         if n == nil then
+            if err then
+                lt.failure("send error: %s", err)
+            end
             halfclose_w = true
             event_w = false
             if halfclose_r then
