@@ -29,7 +29,7 @@ local function event_tostring(e)
         local v = epoll[name]
         if v and e & v ~= 0 then
             r[#r+1] = name
-            e = e - v
+            e = e & ~v
             if e == 0 then
                 return table.concat(r, " | ")
             end
