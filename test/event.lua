@@ -46,7 +46,7 @@ local function event_tointeger(e)
     for name in e:gmatch "[A-Z]+" do
         local v = epoll[name]
         if v then
-            r = r & v
+            r = r | v
         end
     end
     return r
