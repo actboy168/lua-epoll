@@ -10,6 +10,9 @@ lm:lua_dll "epoll" {
         sources = "3rd/wepoll/wepoll.c",
         defines = "_CRT_SECURE_NO_WARNINGS",
         links = "ws2_32",
+    },
+    macos = {
+        sources = "src/kqueue.cpp",
     }
 }
 
