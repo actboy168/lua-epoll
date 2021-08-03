@@ -16,7 +16,7 @@ static int ref_init(lua_State *L) {
 
 static int ref_close(lua_State *L) {
     luaref ref = getLr(L);
-    luaref_close(L, ref);
+    luaref_close(ref);
     return 0;
 }
 

@@ -124,7 +124,7 @@ static int ep_close(lua_State *L) {
 static int ep_mt_gc(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
     ep_close_epoll(ep);
-    luaref_close(L, ep->ref);
+    luaref_close(ep->ref);
     return 0;
 }
 

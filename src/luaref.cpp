@@ -12,7 +12,8 @@ luaref luaref_init(lua_State* L) {
     return refL;
 }
 
-void luaref_close(lua_State* L, luaref refL) {
+void luaref_close(luaref refL) {
+    lua_State* L = (lua_State*)refL;
     lua_pushnil(L);
     lua_rawsetp(L, LUA_REGISTRYINDEX, refL);
 }
