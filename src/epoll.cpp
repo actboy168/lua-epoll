@@ -10,7 +10,7 @@ struct lua_epoll {
     int max_events;
     int i;
     int n;
-    lua_State* ref;
+    luaref ref;
     struct epoll_event events[1];
 };
 
