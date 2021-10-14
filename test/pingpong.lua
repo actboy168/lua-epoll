@@ -1,7 +1,7 @@
 local lt = require "ltest"
+local helper = require "test.helper"
 
 local m = lt.test "framework"
-local socket = require "bee.socket"
 local epoll = require "epoll"
 local epfd = epoll.create(512)
 
@@ -190,7 +190,7 @@ function m.test()
         return port
     end
     local quit = false
-    local s = assert(socket.bind("tcp", "127.0.0.1", 0))
+    local s = helper.SimpleServer("tcp", "127.0.0.1", 0)
     local server = create_listen(s)
     function server:on_accept()
         local newfd = assert(self.fd:accept())
@@ -206,7 +206,7 @@ function m.test()
         end
     end
 
-    local c = assert(socket.connect("tcp", "127.0.0.1", get_port(s)))
+    local c = helper.SimpleClient("tcp", "127.0.0.1", get_port(s))
     local client = create_stream(c)
     client:send "PING-1"
     function client:on_recv()

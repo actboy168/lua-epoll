@@ -1,6 +1,6 @@
 local lt = require "ltest"
 local epoll = require "epoll"
-local socket = require "bee.socket"
+local helper = require "test.helper"
 
 local m = lt.test "basic"
 
@@ -13,7 +13,7 @@ end
 
 function m.test_close()
     local epfd = epoll.create(16)
-    local fd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
+    local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
     epfd:event_init(fd:handle())
     epfd:close()
     lt.assertErrorMsgEquals("(9) Bad file descriptor", epfd.close, epfd)
@@ -22,7 +22,7 @@ end
 
 function m.test_event()
     local epfd = epoll.create(16)
-    local fd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
+    local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
     lt.assertError(epfd.event_add, epfd, fd:handle(), 0)
     lt.assertError(epfd.event_mod, epfd, fd:handle(), 0)
     lt.assertError(epfd.event_del, epfd, fd:handle())
@@ -94,7 +94,7 @@ function m.test_wait()
         end
     end
     local epfd <close> = epoll.create(16)
-    local fd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
+    local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
     epfd:event_init(fd:handle(), fd)
     for _ in epfd:wait(0) do
         lt.failure "Shouldn't run to here."

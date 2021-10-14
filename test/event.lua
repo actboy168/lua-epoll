@@ -1,7 +1,7 @@
 local lt = require "ltest"
 local epoll = require "epoll"
-local socket = require "bee.socket"
 local time = require "bee.time"
+local helper = require "test.helper"
 
 local events = {
     "EPOLLIN",
@@ -93,8 +93,8 @@ end
 local m = lt.test "event"
 
 function m.test_connect()
-    local sfd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
-    local cfd <close> = assert(socket.connect("tcp", "127.0.0.1", get_port(sfd)))
+    local sfd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
+    local cfd <close> = helper.SimpleClient("tcp", "127.0.0.1", get_port(sfd))
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
     sep:event_init(sfd:handle(), sfd, epoll.EPOLLIN | epoll.EPOLLOUT)
@@ -104,8 +104,8 @@ function m.test_connect()
 end
 
 function m.test_send_recv()
-    local sfd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
-    local cfd <close> = assert(socket.connect("tcp", "127.0.0.1", get_port(sfd)))
+    local sfd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
+    local cfd <close> = helper.SimpleClient("tcp", "127.0.0.1", get_port(sfd))
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
     sep:event_init(sfd:handle(), sfd, epoll.EPOLLIN | epoll.EPOLLOUT)
@@ -127,8 +127,8 @@ function m.test_send_recv()
 end
 
 function m.test_shutdown()
-    local sfd <close> = assert(socket.bind("tcp", "127.0.0.1", 0))
-    local cfd <close> = assert(socket.connect("tcp", "127.0.0.1", get_port(sfd)))
+    local sfd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
+    local cfd <close> = helper.SimpleClient("tcp", "127.0.0.1", get_port(sfd))
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
     sep:event_init(sfd:handle(), sfd, epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP)
