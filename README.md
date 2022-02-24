@@ -4,7 +4,14 @@
 
 Lua binding of epoll. 
 
-# todo
+## Build
 
-* more test
-* example
+> luamake
+
+## Test
+
+> luamake test
+
+## Run Example
+
+> luamake lua example/main.lua
