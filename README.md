@@ -10,7 +10,7 @@ Lua binding of epoll.
 
 ## Test
 
-> luamake test
+> luamake runtest
 
 ## Run Example
 
