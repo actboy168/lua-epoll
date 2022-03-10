@@ -13,7 +13,7 @@ typedef HANDLE epoll_handle;
 
 #elif defined(__APPLE__)
 
-#include "kqueue.h"
+#include "epoll_kqueue.h"
 #include <unistd.h>
 typedef int epoll_fd;
 typedef int epoll_handle;

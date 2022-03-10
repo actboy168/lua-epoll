@@ -12,7 +12,7 @@ lm:lua_dll "epoll" {
         links = "ws2_32",
     },
     macos = {
-        sources = "src/kqueue.cpp",
+        sources = "src/epoll_kqueue.cpp",
     }
 }
 
