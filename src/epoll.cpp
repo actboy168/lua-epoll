@@ -287,11 +287,17 @@ static int ep_create(lua_State *L) {
     return 1;
 }
 
-#if defined(_WIN32)
-extern "C" __declspec(dllexport)
+#if !defined(LUAEPOLL_STATIC)
+#    if defined(_WIN32)
+#        define LUAEPOLL_API extern "C" __declspec(dllexport)
+#    else
+#        define LUAEPOLL_API extern "C" __attribute__((visibility("default")))
+#    endif
 #else
-extern "C" __attribute__((visibility("default")))
+#    define LUAEPOLL_API extern "C"
 #endif
+
+LUAEPOLL_API
 int luaopen_epoll(lua_State *L) {
     struct luaL_Reg l[] = {
         { "create", ep_create },
