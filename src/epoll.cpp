@@ -3,7 +3,7 @@
 #include <lua.hpp>
 #include <assert.h>
 
-inline static const epoll_handle epoll_invalid_handle = (epoll_handle)-1;
+static const epoll_handle epoll_invalid_handle = (epoll_handle)-1;
 
 struct lua_epoll {
     epoll_handle fd;
