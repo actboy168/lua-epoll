@@ -3,8 +3,6 @@
 
 #define FREELIST 1
 
-static_assert(LUA_NOREF < FREELIST);
-
 luaref luaref_init(lua_State* L) {
     lua_State* refL = lua_newthread(L);
     lua_rawsetp(L, LUA_REGISTRYINDEX, refL);
