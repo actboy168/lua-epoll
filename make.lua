@@ -13,6 +13,9 @@ lm:lua_dll "epoll" {
     },
     macos = {
         sources = "src/epoll_kqueue.cpp",
+    },
+    netbsd = {
+        sources = "src/epoll_kqueue.cpp",
     }
 }
 

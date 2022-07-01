@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/event.h>
+#include <sys/time.h>
 #include <poll.h>
 #include <assert.h>
 #include <stdio.h>
