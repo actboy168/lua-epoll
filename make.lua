@@ -16,6 +16,9 @@ lm:lua_dll "epoll" {
     },
     netbsd = {
         sources = "src/epoll_kqueue.cpp",
+    },
+    freebsd = {
+        sources = "src/epoll_kqueue.cpp",
     }
 }
 
