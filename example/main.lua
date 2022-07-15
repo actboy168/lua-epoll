@@ -5,9 +5,9 @@ local socket = require "socket"
 local network = require "network"
 
 local function server_thread()
-    local severfd = socket.listen("tcp", "127.0.0.1", 12306)
+    local severfd = assert(socket.listen("tcp", "127.0.0.1", 12306))
     while true do
-        local clientfd = severfd:accept()
+        local clientfd = assert(severfd:accept())
         task.fork(function ()
             while true do
                 local data = clientfd:recv(4)
@@ -24,7 +24,7 @@ local function server_thread()
     end
 end
 local function client_thread()
-    local clientfd = socket.connect("tcp", "127.0.0.1", 12306)
+    local clientfd = assert(socket.connect("tcp", "127.0.0.1", 12306))
     for _ = 1, 4 do
         clientfd:send "PING"
         assert(clientfd:recv(4) == "PONG")
