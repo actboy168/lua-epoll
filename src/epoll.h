@@ -11,7 +11,7 @@ typedef HANDLE epoll_handle;
 
 #define EPOLL_TYPE "wepoll"
 
-#elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+#elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 
 #include "epoll_kqueue.h"
 #include <unistd.h>
