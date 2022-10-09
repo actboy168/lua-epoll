@@ -179,7 +179,7 @@ static int ep_event_init(lua_State *L) {
     epoll_fd fd = ep_tofd(L, 2);
     lua_pushvalue(L, 3);
     int r = luaref_ref(ep->ref, L);
-    if (!luaref_isvalid(ep->ref, r)) {
+    if (r == LUA_NOREF) {
         return luaL_error(L, "Too many events.");
     }
     storeref(L, r);
