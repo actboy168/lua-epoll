@@ -63,8 +63,8 @@ static int ep_wait_error(lua_State *L) {
 }
 #endif
 
-static int ep_wait_iter(lua_State *L) {
-    struct lua_epoll* ep = (struct lua_epoll*)lua_touserdata(L, 1);
+static int ep_events(lua_State *L) {
+    struct lua_epoll* ep = (struct lua_epoll*)lua_touserdata(L, lua_upvalueindex(1));
     if (ep->i >= ep->n) {
         return 0;
     }
@@ -86,19 +86,12 @@ static int ep_wait(lua_State *L) {
     int timeout = (int)luaL_optinteger(L, 2, -1);
     int n = epoll_wait(ep->fd, ep->events, ep->max_events, timeout);
     if (n == -1) {
-#if defined(LUAEPOLL_RETURN_ERROR)
-        lua_pushcfunction(L, ep_wait_error);
-        ep_pusherr(L);
-        return 3;
-#else
         return ep_pusherr(L);
-#endif
     }
     ep->i = 0;
     ep->n = n;
-    lua_pushcfunction(L, ep_wait_iter);
-    lua_pushvalue(L, 1);
-    return 2;
+    lua_getiuservalue(L, 1, 2);
+    return 1;
 }
 
 static bool ep_close_epoll(struct lua_epoll* ep) {
@@ -253,9 +246,12 @@ static int ep_create(lua_State *L) {
         return ep_pusherr(L);
     }
     size_t sz = sizeof(struct lua_epoll) + (max_events - 1) * sizeof(struct epoll_event);
-    struct lua_epoll* ep = (struct lua_epoll*)lua_newuserdatauv(L, sz, 1);
+    struct lua_epoll* ep = (struct lua_epoll*)lua_newuserdatauv(L, sz, 2);
     lua_newtable(L);
     lua_setiuservalue(L, -2, 1);
+    lua_pushvalue(L, -1);
+    lua_pushcclosure(L, ep_events, 1);
+    lua_setiuservalue(L, -2, 2);
     ep->fd = epfd;
     ep->max_events = max_events;
     ep->ref = luaref_init(L);
