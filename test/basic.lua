@@ -1,12 +1,28 @@
 local lt = require "ltest"
 local epoll = require "epoll"
 local helper = require "test.helper"
+local stringify = require "stringify"
 
 local m = lt.test "basic"
 
+local function assertSuccess(expected, actual, errmsg)
+    if not lt.equals(actual, expected) then
+        lt.failure("expected: %s, actual: %s.%s", stringify(expected), stringify(actual), errmsg or '')
+    end
+end
+
+local function assertFailed(expected_errmsg, actual, actual_errmsg)
+    if actual ~= nil then
+        lt.failure('No failed but expected errmsg: %s', stringify(expected_errmsg))
+    end
+    if not lt.equals(actual_errmsg, expected_errmsg) then
+        lt.failure("expected errmsg: %s, actual errmsg: %s.", stringify(expected_errmsg), stringify(actual_errmsg))
+    end
+end
+
 function m.test_create()
-    lt.assertErrorMsgEquals("maxevents is less than or equal to zero.", epoll.create, -1)
-    lt.assertErrorMsgEquals("maxevents is less than or equal to zero.", epoll.create, 0)
+    assertFailed("maxevents is less than or equal to zero.", epoll.create(-1))
+    assertFailed("maxevents is less than or equal to zero.", epoll.create(0))
     local epfd <close> = epoll.create(16)
     lt.assertIsUserdata(epfd)
 end
@@ -14,44 +30,44 @@ end
 function m.test_close()
     local epfd = epoll.create(16)
     local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    epfd:event_init(fd:handle())
-    epfd:close()
-    lt.assertErrorMsgEquals("(9) Bad file descriptor", epfd.close, epfd)
-    lt.assertErrorMsgEquals("(9) Bad file descriptor", epfd.event_init, epfd, fd:handle())
+    assertSuccess(true, epfd:event_init(fd:handle()))
+    assertSuccess(true, epfd:close())
+    assertFailed("(9) Bad file descriptor", epfd:close())
+    assertFailed("(9) Bad file descriptor", epfd:event_init(fd:handle()))
 end
 
 function m.test_event()
     local epfd = epoll.create(16)
     local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    lt.assertError(epfd.event_add, epfd, fd:handle(), 0)
-    lt.assertError(epfd.event_mod, epfd, fd:handle(), 0)
-    lt.assertError(epfd.event_del, epfd, fd:handle())
-    lt.assertError(epfd.event_close, epfd, fd:handle())
+    lt.assertIsNil(epfd:event_add(fd:handle(), 0))
+    lt.assertIsNil(epfd:event_mod(fd:handle(), 0))
+    lt.assertIsNil(epfd:event_del(fd:handle()))
+    lt.assertIsNil(epfd:event_close(fd:handle()))
 
-    epfd:event_init(fd:handle(), fd, 0)
-    lt.assertError(epfd.event_add, epfd, fd:handle(), 0)
-    epfd:event_mod(fd:handle(), 0)
-    epfd:event_del(fd:handle())
-    lt.assertError(epfd.event_mod, epfd, fd:handle(), 0)
-    lt.assertError(epfd.event_del, epfd, fd:handle())
-    epfd:event_add(fd:handle(), 0)
-    lt.assertError(epfd.event_add, epfd, fd:handle(), 0)
-    epfd:event_mod(fd:handle(), 0)
-    epfd:event_close(fd:handle())
+    assertSuccess(true, epfd:event_init(fd:handle(), fd, 0))
+    lt.assertIsNil(epfd:event_add(fd:handle(), 0))
+    assertSuccess(true, epfd:event_mod(fd:handle(), 0))
+    assertSuccess(true, epfd:event_del(fd:handle()))
+    lt.assertIsNil(epfd:event_mod(fd:handle(), 0))
+    lt.assertIsNil(epfd:event_del(fd:handle()))
+    assertSuccess(true, epfd:event_add(fd:handle(), 0))
+    lt.assertIsNil(epfd:event_add(fd:handle(), 0))
+    assertSuccess(true, epfd:event_mod(fd:handle(), 0))
+    assertSuccess(true, epfd:event_close(fd:handle()))
 
-    epfd:event_init(fd:handle())
-    lt.assertError(epfd.event_mod, epfd, fd:handle(), 0)
-    lt.assertError(epfd.event_del, epfd, fd:handle())
-    epfd:event_add(fd:handle(), 0)
-    lt.assertError(epfd.event_add, epfd, fd:handle(), 0)
-    epfd:event_mod(fd:handle(), 0)
-    epfd:event_del(fd:handle())
-    epfd:event_close(fd:handle())
+    assertSuccess(true, epfd:event_init(fd:handle()))
+    lt.assertIsNil(epfd:event_mod(fd:handle(), 0))
+    lt.assertIsNil(epfd:event_del(fd:handle()))
+    assertSuccess(true, epfd:event_add(fd:handle(), 0))
+    lt.assertIsNil(epfd:event_add(fd:handle(), 0))
+    assertSuccess(true, epfd:event_mod(fd:handle(), 0))
+    assertSuccess(true, epfd:event_del(fd:handle()))
+    assertSuccess(true, epfd:event_close(fd:handle()))
 
-    lt.assertError(epfd.event_add, epfd, fd:handle(), 0)
-    lt.assertError(epfd.event_mod, epfd, fd:handle(), 0)
-    lt.assertError(epfd.event_del, epfd, fd:handle())
-    lt.assertError(epfd.event_close, epfd, fd:handle())
+    lt.assertIsNil(epfd:event_add(fd:handle(), 0))
+    lt.assertIsNil(epfd:event_mod(fd:handle(), 0))
+    lt.assertIsNil(epfd:event_del(fd:handle()))
+    lt.assertIsNil(epfd:event_close(fd:handle()))
     epfd:close()
 end
 
@@ -84,7 +100,7 @@ function m.test_wait()
     do
         local epfd = epoll.create(16)
         epfd:close()
-        lt.assertError(epfd.wait, epfd, 0)
+        lt.assertIsNil(epfd:wait())
     end
     do
         local epfd <close> = epoll.create(16)

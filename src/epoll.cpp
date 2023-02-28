@@ -18,50 +18,25 @@ struct lua_epoll* ep_get(lua_State *L) {
 }
 
 static int ep_pusherr(lua_State *L) {
-#if !defined(LUAEPOLL_RETURN_ERROR)
-    lua_pushfstring(L, "(%d) %s", errno, strerror(errno));
-    return lua_error(L);
-#else
     lua_pushnil(L);
     lua_pushfstring(L, "(%d) %s", errno, strerror(errno));
     return 2;
-#endif
 }
 
 static int ep_pusherr(lua_State *L, const char* msg) {
-#if !defined(LUAEPOLL_RETURN_ERROR)
-    lua_pushstring(L, msg);
-    return lua_error(L);
-#else
     lua_pushnil(L);
     lua_pushstring(L, msg);
     return 2;
-#endif
 }
 
 static int ep_pushsuc(lua_State *L) {
-#if !defined(LUAEPOLL_RETURN_ERROR)
-    return 0;
-#else
     lua_pushboolean(L, 1);
     return 1;
-#endif
 }
 
 static epoll_fd ep_tofd(lua_State *L, int idx) {
     return (epoll_fd)(intptr_t)lua_touserdata(L, idx);
 }
-
-#if defined(LUAEPOLL_RETURN_ERROR)
-static int ep_wait_error(lua_State *L) {
-    if (lua_type(L, 2) != LUA_TSTRING) {
-        return 0;
-    }
-    lua_pushboolean(L, 0);
-    lua_insert(L, -2);
-    return 2;
-}
-#endif
 
 static int ep_events(lua_State *L) {
     struct lua_epoll* ep = (struct lua_epoll*)lua_touserdata(L, lua_upvalueindex(1));
