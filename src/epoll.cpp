@@ -50,12 +50,6 @@ static int ep_events(lua_State *L) {
     return 2;
 }
 
-static int ep_handle(lua_State *L) {
-    struct lua_epoll* ep = ep_get(L);
-    lua_pushlightuserdata(L, (void*)(intptr_t)ep->fd);
-    return 1;
-}
-
 static int ep_wait(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
     int timeout = (int)luaL_optinteger(L, 2, -1);
@@ -234,7 +228,6 @@ static int ep_create(lua_State *L) {
     ep->n = 0;
     if (luaL_newmetatable(L, "EPOLL")) {
         luaL_Reg l[] = {
-            { "handle", ep_handle },
             { "wait", ep_wait },
             { "close", ep_close },
             { "event_init", ep_event_init },

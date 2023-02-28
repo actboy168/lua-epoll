@@ -71,11 +71,6 @@ function m.test_event()
     epfd:close()
 end
 
-function m.test_handle()
-    local epfd <close> = epoll.create(16)
-    lt.assertIsUserdata(epfd:handle())
-end
-
 function m.test_enum()
     lt.assertEquals(epoll.EPOLLIN,     1 << 0)
     lt.assertEquals(epoll.EPOLLPRI,    1 << 1)
