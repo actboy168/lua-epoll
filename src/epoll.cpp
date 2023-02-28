@@ -1,7 +1,6 @@
 #include "epoll.h"
 #include "luaref.h"
 #include <lua.hpp>
-#include <assert.h>
 
 static const epoll_handle epoll_invalid_handle = (epoll_handle)-1;
 
@@ -24,7 +23,18 @@ static int ep_pusherr(lua_State *L) {
     return lua_error(L);
 #else
     lua_pushnil(L);
-    lua_pushstring(L, strerror(errno));
+    lua_pushfstring(L, "(%d) %s", errno, strerror(errno));
+    return 2;
+#endif
+}
+
+static int ep_pusherr(lua_State *L, const char* msg) {
+#if !defined(LUAEPOLL_RETURN_ERROR)
+    lua_pushstring(L, msg);
+    return lua_error(L);
+#else
+    lua_pushnil(L);
+    lua_pushstring(L, msg);
     return 2;
 #endif
 }
@@ -166,7 +176,7 @@ static int ep_event_init(lua_State *L) {
     lua_pushvalue(L, 3);
     int r = luaref_ref(ep->ref, L);
     if (r == LUA_NOREF) {
-        return luaL_error(L, "Too many events.");
+        return ep_pusherr(L, "Too many events.");
     }
     storeref(L, r);
     if (!lua_isnoneornil(L, 4)) {
@@ -185,11 +195,11 @@ static int ep_event_close(lua_State *L) {
     epoll_fd fd = ep_tofd(L, 2);
     int r = cleanref(L);
     if (r == LUA_NOREF) {
-        return luaL_error(L, "event is not initialized.");
+        return ep_pusherr(L, "event is not initialized.");
     }
     luaref_unref(ep->ref, r);
     epoll_ctl(ep->fd, EPOLL_CTL_DEL, fd, NULL);
-    return 0;
+    return ep_pushsuc(L);
 }
 
 static int ep_event_add(lua_State *L) {
@@ -197,7 +207,7 @@ static int ep_event_add(lua_State *L) {
     epoll_fd fd = ep_tofd(L, 2);
     int r = findref(L);
     if (r == LUA_NOREF) {
-        return luaL_error(L, "event is not initialized.");
+        return ep_pusherr(L, "event is not initialized.");
     }
     struct epoll_event ev;
     ev.events = (uint32_t)luaL_checkinteger(L, 3);
@@ -213,7 +223,7 @@ static int ep_event_mod(lua_State *L) {
     epoll_fd fd = ep_tofd(L, 2);
     int r = findref(L);
     if (r == LUA_NOREF) {
-        return luaL_error(L, "event is not initialized.");
+        return ep_pusherr(L, "event is not initialized.");
     }
     struct epoll_event ev;
     ev.events = (uint32_t)luaL_checkinteger(L, 3);
@@ -236,7 +246,7 @@ static int ep_event_del(lua_State *L) {
 static int ep_create(lua_State *L) {
     int max_events = (int)luaL_checkinteger(L, 1);
     if (max_events <= 0) {
-        return luaL_error(L, "maxevents is less than or equal to zero.");
+        return ep_pusherr(L, "maxevents is less than or equal to zero.");
     }
     epoll_handle epfd = epoll_create(1);
     if (epfd == epoll_invalid_handle) {
