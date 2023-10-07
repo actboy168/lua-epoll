@@ -271,10 +271,15 @@ function S.accept(h)
     s.on_read = task.wakeup
     fd_set_read(fd)
     task.wait(s)
-    local newfd = fd:accept()
-    if newfd:status() then
-        return create_stream(newfd)
+    local newfd, err = fd:accept()
+    if not newfd then
+        return nil, err
     end
+    local ok, err = newfd:status()
+    if not ok then
+        return nil, err
+    end
+    return create_stream(newfd)
 end
 
 function S.send(h, data)
