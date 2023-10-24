@@ -128,55 +128,31 @@ static int findref(lua_State *L) {
     return r;
 }
 
-static int ep_event_init(lua_State *L) {
+static int ep_event_add(lua_State *L) {
     struct lua_epoll* ep = ep_get(L);
     if (ep->fd == epoll_invalid_handle) {
         errno = EBADF;
         return ep_pusherr(L);
     }
     epoll_fd fd = ep_tofd(L, 2);
-    lua_pushvalue(L, 3);
+    if (lua_isnoneornil(L, 4)) {
+        lua_pushvalue(L, 2);
+    }
+    else {
+        lua_pushvalue(L, 4);
+    }
     int r = luaref_ref(ep->ref, L);
     if (r == LUA_NOREF) {
         return ep_pusherr(L, "Too many events.");
     }
-    storeref(L, r);
-    if (!lua_isnoneornil(L, 4)) {
-        struct epoll_event ev;
-        ev.events = (uint32_t)luaL_checkinteger(L, 4);
-        ev.data.u32 = r;
-        if (epoll_ctl(ep->fd, EPOLL_CTL_ADD, fd, &ev) == -1){
-            return ep_pusherr(L);
-        }
-    }
-    return ep_pushsuc(L);
-}
-
-static int ep_event_close(lua_State *L) {
-    struct lua_epoll* ep = ep_get(L);
-    epoll_fd fd = ep_tofd(L, 2);
-    int r = cleanref(L);
-    if (r == LUA_NOREF) {
-        return ep_pusherr(L, "event is not initialized.");
-    }
-    luaref_unref(ep->ref, r);
-    epoll_ctl(ep->fd, EPOLL_CTL_DEL, fd, NULL);
-    return ep_pushsuc(L);
-}
-
-static int ep_event_add(lua_State *L) {
-    struct lua_epoll* ep = ep_get(L);
-    epoll_fd fd = ep_tofd(L, 2);
-    int r = findref(L);
-    if (r == LUA_NOREF) {
-        return ep_pusherr(L, "event is not initialized.");
-    }
     struct epoll_event ev;
     ev.events = (uint32_t)luaL_checkinteger(L, 3);
     ev.data.u32 = r;
-    if (epoll_ctl(ep->fd, EPOLL_CTL_ADD, fd, &ev) == -1){
+    if (epoll_ctl(ep->fd, EPOLL_CTL_ADD, fd, &ev) == -1) {
+        luaref_unref(ep->ref, r);
         return ep_pusherr(L);
     }
+    storeref(L, r);
     return ep_pushsuc(L);
 }
 
@@ -201,6 +177,10 @@ static int ep_event_del(lua_State *L) {
     epoll_fd fd = ep_tofd(L, 2);
     if (epoll_ctl(ep->fd, EPOLL_CTL_DEL, fd, NULL) == -1) {
         return ep_pusherr(L);
+    }
+    int r = cleanref(L);
+    if (r != LUA_NOREF) {
+        luaref_unref(ep->ref, r);
     }
     return ep_pushsuc(L);
 }
@@ -230,8 +210,6 @@ static int ep_create(lua_State *L) {
         luaL_Reg l[] = {
             { "wait", ep_wait },
             { "close", ep_close },
-            { "event_init", ep_event_init },
-            { "event_close", ep_event_close },
             { "event_add", ep_event_add },
             { "event_mod", ep_event_mod },
             { "event_del", ep_event_del },

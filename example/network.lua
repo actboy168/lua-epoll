@@ -23,13 +23,7 @@ local function event_update(s)
         mask = mask | EPOLLOUT
     end
     if mask ~= s.event_mask then
-        if mask == 0 then
-            epfd:event_del(s.fd:handle())
-        elseif s.event_mask == 0 then
-            epfd:event_add(s.fd:handle(), mask)
-        else
-            epfd:event_mod(s.fd:handle(), mask)
-        end
+        epfd:event_mod(s.fd:handle(), mask)
         s.event_mask = mask
     end
 end
@@ -74,7 +68,7 @@ local function fd_init(fd)
             end
         end
     end
-    epfd:event_init(fd:handle(), on_event)
+    epfd:event_add(fd:handle(), 0, on_event)
 end
 
 local function create_handle(fd)
@@ -90,7 +84,7 @@ end
 
 local function close(s)
     local fd = s.fd
-    epfd:event_close(fd:handle())
+    epfd:event_del(fd:handle())
     fd:close()
     assert(s.halfclose_r)
     assert(s.halfclose_w)

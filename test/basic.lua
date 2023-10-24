@@ -30,21 +30,19 @@ end
 function m.test_close()
     local epfd = epoll.create(16)
     local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    assertSuccess(true, epfd:event_init(fd:handle()))
+    assertSuccess(true, epfd:event_add(fd:handle(), 0))
     assertSuccess(true, epfd:close())
     assertFailed("(9) Bad file descriptor", epfd:close())
-    assertFailed("(9) Bad file descriptor", epfd:event_init(fd:handle()))
+    assertFailed("(9) Bad file descriptor", epfd:event_add(fd:handle(), 0))
 end
 
 function m.test_event()
     local epfd = epoll.create(16)
     local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    lt.assertIsNil(epfd:event_add(fd:handle(), 0))
     lt.assertIsNil(epfd:event_mod(fd:handle(), 0))
     lt.assertIsNil(epfd:event_del(fd:handle()))
-    lt.assertIsNil(epfd:event_close(fd:handle()))
 
-    assertSuccess(true, epfd:event_init(fd:handle(), fd, 0))
+    assertSuccess(true, epfd:event_add(fd:handle(), 0))
     lt.assertIsNil(epfd:event_add(fd:handle(), 0))
     assertSuccess(true, epfd:event_mod(fd:handle(), 0))
     assertSuccess(true, epfd:event_del(fd:handle()))
@@ -53,21 +51,8 @@ function m.test_event()
     assertSuccess(true, epfd:event_add(fd:handle(), 0))
     lt.assertIsNil(epfd:event_add(fd:handle(), 0))
     assertSuccess(true, epfd:event_mod(fd:handle(), 0))
-    assertSuccess(true, epfd:event_close(fd:handle()))
-
-    assertSuccess(true, epfd:event_init(fd:handle()))
-    lt.assertIsNil(epfd:event_mod(fd:handle(), 0))
-    lt.assertIsNil(epfd:event_del(fd:handle()))
-    assertSuccess(true, epfd:event_add(fd:handle(), 0))
-    lt.assertIsNil(epfd:event_add(fd:handle(), 0))
-    assertSuccess(true, epfd:event_mod(fd:handle(), 0))
     assertSuccess(true, epfd:event_del(fd:handle()))
-    assertSuccess(true, epfd:event_close(fd:handle()))
 
-    lt.assertIsNil(epfd:event_add(fd:handle(), 0))
-    lt.assertIsNil(epfd:event_mod(fd:handle(), 0))
-    lt.assertIsNil(epfd:event_del(fd:handle()))
-    lt.assertIsNil(epfd:event_close(fd:handle()))
     epfd:close()
 end
 
@@ -106,7 +91,7 @@ function m.test_wait()
     end
     local epfd <close> = epoll.create(16)
     local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    epfd:event_init(fd:handle(), fd)
+    epfd:event_add(fd:handle(), 0, fd)
     for _ in epfd:wait(0) do
         lt.failure "Shouldn't run to here."
     end
