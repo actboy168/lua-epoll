@@ -1,4 +1,5 @@
 local lm = require "luamake"
+lm:required_version "1.7"
 
 lm:lua_dll "epoll" {
     sources = {
@@ -39,7 +40,7 @@ lm:build "runtest" {
         "epoll",
         "testlib"
     },
-    "$luamake", "test"
+    args = { "$luamake", "test" },
 }
 
 lm:default "epoll"
