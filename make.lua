@@ -7,8 +7,12 @@ lm:lua_dll "epoll" {
         "src/luaref.cpp",
     },
     windows = {
-        includes = "3rd/wepoll",
-        sources = "3rd/wepoll/wepoll.c",
+        includes = {
+            "3rd/wepoll/include",
+            "3rd/wepoll/config/external/static",
+            "3rd/wepoll/config/internal/default",
+        },
+        sources = "3rd/wepoll/src/*.c",
         defines = "_CRT_SECURE_NO_WARNINGS",
         links = "ws2_32",
     },

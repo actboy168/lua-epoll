@@ -67,11 +67,9 @@ function m.test_enum()
     lt.assertEquals(epoll.EPOLLWRBAND, 1 << 9)
     lt.assertEquals(epoll.EPOLLMSG,    1 << 10)
     lt.assertEquals(epoll.EPOLLRDHUP,  1 << 13)
-    if epoll.type == "wepoll" then
-        lt.assertEquals(epoll.EPOLLONESHOT, 1 << 31)
-    else
-        lt.assertEquals(epoll.EPOLLONESHOT, 1 << 30)
-        lt.assertEquals(epoll.EPOLLET,      1 << 31)
+    lt.assertEquals(epoll.EPOLLONESHOT, 1 << 30)
+    if epoll.type ~= "wepoll" then
+        lt.assertEquals(epoll.EPOLLET, 1 << 31)
     end
 end
 
