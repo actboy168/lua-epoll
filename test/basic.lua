@@ -1,22 +1,21 @@
 local lt = require "ltest"
 local epoll = require "epoll"
 local helper = require "test.helper"
-local stringify = require "stringify"
 
 local m = lt.test "basic"
 
 local function assertSuccess(expected, actual, errmsg)
     if not lt.equals(actual, expected) then
-        lt.failure("expected: %s, actual: %s.%s", stringify(expected), stringify(actual), errmsg or '')
+        lt.failure("expected: %s, actual: %s.%s", lt.stringify(expected), lt.stringify(actual), errmsg or '')
     end
 end
 
 local function assertFailed(expected_errmsg, actual, actual_errmsg)
     if actual ~= nil then
-        lt.failure('No failed but expected errmsg: %s', stringify(expected_errmsg))
+        lt.failure('No failed but expected errmsg: %s', lt.stringify(expected_errmsg))
     end
     if not lt.equals(actual_errmsg, expected_errmsg) then
-        lt.failure("expected errmsg: %s, actual errmsg: %s.", stringify(expected_errmsg), stringify(actual_errmsg))
+        lt.failure("expected errmsg: %s, actual errmsg: %s.", lt.stringify(expected_errmsg), lt.stringify(actual_errmsg))
     end
 end
 
