@@ -223,7 +223,7 @@ end
 local S = {}
 
 function S.listen(protocol, ...)
-    local fd, err = socket(protocol)
+    local fd, err = socket.create(protocol)
     if not fd then
         return nil, err
     end
@@ -248,7 +248,7 @@ function S.listen(protocol, ...)
 end
 
 function S.connect(protocol, ...)
-    local fd, err = socket(protocol)
+    local fd, err = socket.create(protocol)
     if not fd then
         return nil, err
     end
