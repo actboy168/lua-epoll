@@ -85,16 +85,11 @@ local function assertEpollWait(epfd, values)
     lt.assertEquals(actual, expected)
 end
 
-local function get_port(fd)
-    local _, port = fd:info "socket"
-    return port
-end
-
 local m = lt.test "event"
 
 function m.test_connect()
     local sfd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    local cfd <close> = helper.SimpleClient("tcp", "127.0.0.1", get_port(sfd))
+    local cfd <close> = helper.SimpleClient("tcp", sfd:info "socket")
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
     sep:event_add(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
@@ -105,7 +100,7 @@ end
 
 function m.test_send_recv()
     local sfd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    local cfd <close> = helper.SimpleClient("tcp", "127.0.0.1", get_port(sfd))
+    local cfd <close> = helper.SimpleClient("tcp", sfd:info "socket")
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
     sep:event_add(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
@@ -128,7 +123,7 @@ end
 
 function m.test_shutdown()
     local sfd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    local cfd <close> = helper.SimpleClient("tcp", "127.0.0.1", get_port(sfd))
+    local cfd <close> = helper.SimpleClient("tcp", sfd:info "socket")
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
     sep:event_add(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, sfd)

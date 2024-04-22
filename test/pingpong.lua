@@ -179,10 +179,6 @@ local function create_listen(fd)
 end
 
 function m.test()
-    local function get_port(fd)
-        local _, port = fd:info "socket"
-        return port
-    end
     local quit = false
     local s = helper.SimpleServer("tcp", "127.0.0.1", 0)
     local server = create_listen(s)
@@ -200,7 +196,7 @@ function m.test()
         end
     end
 
-    local c = helper.SimpleClient("tcp", "127.0.0.1", get_port(s))
+    local c = helper.SimpleClient("tcp", s:info "socket")
     local client = create_stream(c)
     client:send "PING-1"
     function client:on_recv()
