@@ -1,6 +1,7 @@
-# lua-epoll
+> [!NOTE]
+> Has been merged into [actboy168/bee.lua](https://github.com/actboy168/bee.lua)
 
-[![build](https://github.com/actboy168/lua-epoll/actions/workflows/test.yml/badge.svg)](https://github.com/actboy168/lua-epoll/actions/workflows/test.yml)
+# lua-epoll
 
 Lua binding of epoll. 
 
